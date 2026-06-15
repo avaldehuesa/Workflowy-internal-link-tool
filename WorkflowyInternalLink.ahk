@@ -20,7 +20,7 @@
 #SingleInstance Force
 
 ; ============================ Configuration =================================
-HOTKEY          := "^!l"            ; Ctrl+Alt+L. See AHK docs for syntax:
+TRIGGER_KEY     := "^!l"            ; Ctrl+Alt+L. See AHK docs for syntax:
                                     ; ^ = Ctrl, ! = Alt, + = Shift, # = Win
 LABEL_PREFIX    := "WorkflowyItem#" ; text before the generated label
 MAX_WORDS       := 4                ; how many words of the node to use
@@ -35,16 +35,16 @@ TARGET_EXES := [
 ]
 ; ============================================================================
 
-A_IconTip := "Workflowy Internal Link Tool (" HotkeyToText(HOTKEY) ")"
+A_IconTip := "Workflowy Internal Link Tool (" HotkeyToText(TRIGGER_KEY) ")"
 
 for exe in TARGET_EXES
     GroupAdd "WorkflowyHosts", "ahk_exe " exe
 
 HotIfWinActive "ahk_group WorkflowyHosts"
-Hotkey HOTKEY, CreateInternalLink
+Hotkey TRIGGER_KEY, CreateInternalLink
 HotIfWinActive
 
-TrayTip "Ready. Press " HotkeyToText(HOTKEY) " inside a Workflowy node.",
+TrayTip "Ready. Press " HotkeyToText(TRIGGER_KEY) " inside a Workflowy node.",
     "Workflowy Internal Link Tool"
 
 CreateInternalLink(*)

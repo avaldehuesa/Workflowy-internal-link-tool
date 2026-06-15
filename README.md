@@ -55,7 +55,7 @@ Edit the configuration block at the top of the script:
 
 | Setting           | Default            | Meaning                                            |
 | ----------------- | ------------------ | -------------------------------------------------- |
-| `HOTKEY`          | `^!l` (Ctrl+Alt+L) | The trigger hotkey ([syntax](https://www.autohotkey.com/docs/v2/Hotkeys.htm)) |
+| `TRIGGER_KEY`     | `^!l` (Ctrl+Alt+L) | The trigger hotkey ([syntax](https://www.autohotkey.com/docs/v2/Hotkeys.htm)) |
 | `LABEL_PREFIX`    | `WorkflowyItem#`   | Text before the generated label                    |
 | `MAX_WORDS`       | `4`                | How many words of the node go into the label       |
 | `MAX_LABEL_CHARS` | `40`               | Hard cap on the label length                       |
