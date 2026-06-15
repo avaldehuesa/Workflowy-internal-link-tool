@@ -24,7 +24,10 @@ TRIGGER_KEY     := "^!l"            ; Ctrl+Alt+L. See AHK docs for syntax:
                                     ; ^ = Ctrl, ! = Alt, + = Shift, # = Win
 LABEL_PREFIX    := "WorkflowyItem#" ; text before the generated label
 MAX_WORDS       := 4                ; how many words of the node to use
-MAX_LABEL_CHARS := 40               ; hard cap on generated label length
+MAX_LABEL_CHARS := 40               ; hard cap on the word part of the label
+DATE_FORMAT     := "yyyyMMdd"       ; date appended to the label; "" = no date
+KEEP_MARKER     := true             ; leave an unlinked label on the original
+                                    ; node as a "referenced" marker
 STEP_DELAY      := 120              ; ms between keystrokes; raise if flaky
 PASTE_DELAY     := 250              ; ms after each paste; raise if flaky
 
@@ -68,6 +71,8 @@ CreateInternalLink(*)
         Fail savedClip, "The node appears to be empty - nothing to build a label from."
         return
     }
+    if (DATE_FORMAT != "")
+        label .= FormatTime(A_Now, DATE_FORMAT)   ; e.g. ...AddUniqueText20260615
     fullLabel := "[" LABEL_PREFIX label "]"
     labelLen  := StrLen(fullLabel)
 
@@ -88,13 +93,17 @@ CreateInternalLink(*)
         return
     }
 
-    ; --- 3. Paste the label at the end of the node ------------------------
-    A_Clipboard := fullLabel
+    ; --- 3. Append the label(s) to the end of the node -------------------
+    ; If KEEP_MARKER is on, paste the label twice (" [label] [label]"). The
+    ; first stays as an unlinked "referenced" marker; the second is turned
+    ; into the hyperlink and cut out. Otherwise paste it once.
+    pasted := KEEP_MARKER ? " " fullLabel " " fullLabel : " " fullLabel
+    A_Clipboard := pasted
     ClipWait 1
     Send "^v"
     Sleep PASTE_DELAY
 
-    ; --- 4. Select the label and paste the URL over it to hyperlink it ----
+    ; --- 4. Hyperlink the last label by pasting the URL over it ----------
     Send "+{Left " labelLen "}"
     Sleep STEP_DELAY
     A_Clipboard := url
@@ -102,8 +111,8 @@ CreateInternalLink(*)
     Send "^v"
     Sleep PASTE_DELAY
 
-    ; --- 5. Select the hyperlinked label and cut it -----------------------
-    ; The visible text length is unchanged, so the same selection works.
+    ; --- 5. Cut the hyperlinked label out (plus its leading space) -------
+    ; The visible text length is unchanged, so the same count still works.
     Send "+{Left " labelLen "}"
     Sleep STEP_DELAY
     A_Clipboard := ""
@@ -112,9 +121,13 @@ CreateInternalLink(*)
         Fail savedClip, "Cutting the hyperlinked label failed. The node may need manual cleanup (Ctrl+Z)."
         return
     }
+    Send "{BackSpace}"   ; remove the separator space left before the cut label
+    Sleep STEP_DELAY
 
-    TrayTip "Copied " fullLabel "`nPaste it (Ctrl+V) wherever you want the reference.",
-        "Workflowy Internal Link Tool"
+    msg := KEEP_MARKER
+        ? "Copied the link for " fullLabel "`nAn unlinked marker was left on the node. Paste (Ctrl+V) to reference it."
+        : "Copied " fullLabel "`nPaste it (Ctrl+V) wherever you want the reference."
+    TrayTip msg, "Workflowy Internal Link Tool"
 }
 
 ; Build a PascalCase label from the first MAX_WORDS words of the node text.

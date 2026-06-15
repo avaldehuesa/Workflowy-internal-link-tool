@@ -2,11 +2,16 @@
 
 One-hotkey creation of internal links in [Workflowy](https://workflowy.com).
 
-Put your cursor in any Workflowy node, press **Ctrl+Alt+L**, and your
-clipboard now contains a hyperlinked label like
-**[WorkflowyItem#BuyMilkAtThe]** that points to that node. Paste it
-(Ctrl+V) anywhere in Workflowy to create the reference. The original node
-is left unchanged.
+Put your cursor in any Workflowy node, press **Ctrl+Alt+L**, and:
+
+- An **unlinked** label like `[WorkflowyItem#BuyMilkAtThe20260615]` is left
+  at the end of that node, marking it as "referenced from somewhere" so you
+  don't delete it by accident.
+- Your **clipboard** gets the **hyperlinked** version of that label. Paste
+  it (Ctrl+V) anywhere in Workflowy to create the reference.
+
+The label is the first few words of the node in PascalCase, followed by
+today's date in `YYYYMMDD` form.
 
 This replaces a manual workflow that previously required PhraseExpress,
 ClipboardFusion, and several copy/select/paste steps per link.
@@ -19,15 +24,21 @@ in the Workflowy desktop app, and is unaffected by Workflowy UI redesigns:
 
 1. **Capture** — `Ctrl+A` (Workflowy's "select current item") + `Ctrl+C`
    grabs the node text.
-2. **Label** — the first 4 words are converted to PascalCase and wrapped
-   into `[WorkflowyItem#LikeThis]`.
+2. **Label** — the first 4 words are converted to PascalCase and today's
+   date is appended, wrapped into `[WorkflowyItem#LikeThis20260615]`.
 3. **Link** — `Alt+Shift+L` (Workflowy's native "copy internal link")
    puts the node's URL in the clipboard.
-4. **Hyperlink** — the label is pasted at the end of the node, selected,
-   and the URL is pasted over it. Workflowy converts text that has a URL
-   pasted over it into a hyperlink.
-5. **Cut** — the hyperlinked label is cut, restoring the node and leaving
-   the finished link in your clipboard, ready to paste.
+4. **Paste** — the label is appended to the node twice (`… [label] [label]`).
+   The first copy stays as the unlinked marker.
+5. **Hyperlink** — the second copy is selected and the URL is pasted over
+   it. Workflowy converts text that has a URL pasted over it into a
+   hyperlink.
+6. **Cut** — the hyperlinked copy is cut out, leaving the unlinked marker on
+   the node and the finished link in your clipboard, ready to paste.
+
+If you prefer the original "leave the node untouched" behavior, set
+`KEEP_MARKER := false` in the config block; the script then appends no
+marker and just puts the hyperlinked label in your clipboard.
 
 If anything fails mid-way, the script restores your original clipboard and
 shows an error notification. `Ctrl+Z` in Workflowy undoes any partial edit.
@@ -58,7 +69,9 @@ Edit the configuration block at the top of the script:
 | `TRIGGER_KEY`     | `^!l` (Ctrl+Alt+L) | The trigger hotkey ([syntax](https://www.autohotkey.com/docs/v2/Hotkeys.htm)) |
 | `LABEL_PREFIX`    | `WorkflowyItem#`   | Text before the generated label                    |
 | `MAX_WORDS`       | `4`                | How many words of the node go into the label       |
-| `MAX_LABEL_CHARS` | `40`               | Hard cap on the label length                       |
+| `MAX_LABEL_CHARS` | `40`               | Hard cap on the word part of the label             |
+| `DATE_FORMAT`     | `yyyyMMdd`         | Date appended to the label; `""` disables it ([format codes](https://www.autohotkey.com/docs/v2/lib/FormatTime.htm)) |
+| `KEEP_MARKER`     | `true`             | Leave an unlinked marker label on the original node |
 | `STEP_DELAY`      | `120` ms           | Pause between keystrokes                           |
 | `PASTE_DELAY`     | `250` ms           | Pause after each paste                             |
 | `TARGET_EXES`     | major browsers     | Apps where the hotkey is active                    |
