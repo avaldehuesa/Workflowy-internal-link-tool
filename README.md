@@ -79,6 +79,39 @@ After editing, right-click the tray icon and choose **Reload Script**.
   selects the current item only when the cursor is in a node's text;
   click into the node first.
 
+## Antivirus false positives
+
+Some antivirus products (e.g. Norton, with a detection like `IDP.Generic`
+flagged by "Behavioral Protection") may flag this script — or
+`AutoHotkey64.exe` itself — as a threat. **This is a false positive.**
+
+It happens because the script's core job is to **simulate keystrokes and
+read/write the clipboard** — the same behaviors that keyloggers and
+clipboard-stealers exhibit. A behavioral/heuristic scanner can't tell
+benign automation apart from malicious automation, so AutoHotkey scripts
+are among the most commonly false-flagged legitimate tools. When the
+antivirus blames `AutoHotkey64.exe`, that's the interpreter running the
+script, not a compromised AutoHotkey install.
+
+For the record, this script:
+
+- Makes **no network connections** (there is no download/HTTP/socket code)
+- Writes **no files**, touches **no registry keys**, spawns **no processes**
+- Only sends keystrokes, uses the clipboard, and shows tray notifications
+
+Nothing leaves your machine. The script is plain, readable text — open it
+and check every line yourself.
+
+**To verify independently:**
+
+1. Upload `WorkflowyInternalLink.ahk` to [VirusTotal](https://www.virustotal.com);
+   a plain-text AHK script comes back clean from essentially all engines.
+2. Read the source — it's commented top to bottom.
+3. Confirm the only process involved is the official `AutoHotkey64.exe`
+   from `C:\Program Files\AutoHotkey\v2\`.
+
+**To resolve:** add the script to your antivirus's exclusions/allow list.
+
 ## Limitations
 
 - The label is generated from the node's first words. If you want a
