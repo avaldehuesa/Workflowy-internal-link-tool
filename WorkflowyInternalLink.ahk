@@ -64,7 +64,11 @@ CreateInternalLink(*)
         Fail savedClip, "Couldn't read the node text. Is your cursor inside a Workflowy node?"
         return
     }
-    nodeText := Trim(A_Clipboard)
+    rawText  := A_Clipboard
+    nodeText := Trim(rawText)
+    ; Does the node already end with a space? If so we won't add our own,
+    ; to avoid a double space before the marker label.
+    endsWithSpace := RegExMatch(rawText, "[ \t]\R*$") ? true : false
 
     label := MakePascalLabel(nodeText)
     if (label = "") {
@@ -94,10 +98,14 @@ CreateInternalLink(*)
     }
 
     ; --- 3. Append the label(s) to the end of the node -------------------
-    ; If KEEP_MARKER is on, paste the label twice (" [label] [label]"). The
+    ; With KEEP_MARKER on, paste the label twice ("[label] [label]"). The
     ; first stays as an unlinked "referenced" marker; the second is turned
-    ; into the hyperlink and cut out. Otherwise paste it once.
-    pasted := KEEP_MARKER ? " " fullLabel " " fullLabel : " " fullLabel
+    ; into the hyperlink and cut out. A single leading space separates the
+    ; marker from the node text, unless the node already ends with one.
+    ; With KEEP_MARKER off, paste the label once and cut it back out, so the
+    ; node is left untouched.
+    sep := endsWithSpace ? "" : " "
+    pasted := KEEP_MARKER ? sep fullLabel " " fullLabel : fullLabel
     A_Clipboard := pasted
     ClipWait 1
     Send "^v"
@@ -111,7 +119,7 @@ CreateInternalLink(*)
     Send "^v"
     Sleep PASTE_DELAY
 
-    ; --- 5. Cut the hyperlinked label out (plus its leading space) -------
+    ; --- 5. Cut the hyperlinked label out -------------------------------
     ; The visible text length is unchanged, so the same count still works.
     Send "+{Left " labelLen "}"
     Sleep STEP_DELAY
@@ -121,8 +129,12 @@ CreateInternalLink(*)
         Fail savedClip, "Cutting the hyperlinked label failed. The node may need manual cleanup (Ctrl+Z)."
         return
     }
-    Send "{BackSpace}"   ; remove the separator space left before the cut label
-    Sleep STEP_DELAY
+    ; In marker mode, remove the separator space that sat between the two
+    ; labels, leaving exactly "<node text> [marker]".
+    if (KEEP_MARKER) {
+        Send "{BackSpace}"
+        Sleep STEP_DELAY
+    }
 
     msg := KEEP_MARKER
         ? "Copied the link for " fullLabel "`nAn unlinked marker was left on the node. Paste (Ctrl+V) to reference it."
